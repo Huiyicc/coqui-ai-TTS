@@ -1,0 +1,12 @@
+{
+  "server": {
+    "port": 11435,
+    "host": "0.0.0.0"
+  },
+  "models": {
+    "en_us": {
+      "path": "models/en_us",
+      "lang": "en"
+    }
+  }
+}
