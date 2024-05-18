@@ -3,6 +3,9 @@
     "port": 11435,
     "host": "0.0.0.0"
   },
+  "model_whisper": {
+    "path": "models\\faster-whisper-large-v3"
+  },
   "models": {
     "en_us": {
       "path": "models/en_us",
