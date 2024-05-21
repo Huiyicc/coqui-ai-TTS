@@ -192,14 +192,14 @@ async def upload_file(file: UploadFile = File(...)):
     Returns: 返回创建的文件名
 
     """
-    if not os.path.exists(f"upload"):
-        os.makedirs("upload")
+    if not os.path.exists(server_config.app_config.upload_path):
+        os.makedirs(server_config.app_config.upload_path)
     # 生成uuid
     u = str(uuid.uuid4()).replace("-", "")
     # 生成时间戳
     t = str(int(time.time()))
     # 保存文件
-    with open(f"upload/{u}_{t}", "wb") as f:
+    with open(f"{server_config.app_config.upload_path}/{u}_{t}", "wb") as f:
         f.write(file.file.read())
     return {"name": u}
 
@@ -238,7 +238,7 @@ async def asr(item: RequestASR):
         HTTPException: 如果请求的文件不存在，则抛出400状态码的HTTP异常。
     """
     # 检查需要转写的文件是否存在
-    inpf = "upload/{}".format(item.file_name)
+    inpf = f"{server_config.app_config.upload_path}/{item.file_name}"
     if not os.path.exists(inpf):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File not found")
     global stable_whisper_model
@@ -291,6 +291,7 @@ def initsvr():
         )
         model_cache.model = model_cache.model.cuda()
         models_cache[lang] = model_cache
+
 
 import uvicorn
 

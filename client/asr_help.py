@@ -1,6 +1,4 @@
 
-
-
 def raw_json_to_non_json(d: dict):
     if len(d['segments']) < 1:
         return []
@@ -29,7 +27,7 @@ def raw_json_to_non_json(d: dict):
             text_offset = text_offset + len(word['word'])
     return result_list
 
-def to_vtt_data(raw_file,result:any):
+def to_vtt_data(raw_file ,result :any):
     # TODO: 这个可能需要重新实现
     cfile = raw_file + ".vtt"
     result.to_srt_vtt(cfile)

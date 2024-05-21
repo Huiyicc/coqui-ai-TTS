@@ -27,11 +27,18 @@ class ModleWhisper:
         #     raise FileNotFoundError("Whisper Model path not found")
 
 
+class ModelAppConfig:
+    def __init__(self, jsonobj: dict):
+        self.upload_path = jsonobj.get("upload_path", "upload")
+
+
 class Config:
     models: dict[str, ModleConfig] = {}
     model_whisper: ModleWhisper = None
+    app_config: ModelAppConfig = None
 
-    def __init__(self, svr: ServerConfig, models: dict[str, ModleConfig], whisper: ModleWhisper = None):
+    def __init__(self, svr: ServerConfig, models: dict[str, ModleConfig], whisper: ModleWhisper = None,
+                 app_config: ModelAppConfig = None):
         self.server = svr
         for lang, model in models.items():
             if model.language in self.models.keys():
@@ -40,6 +47,7 @@ class Config:
                 raise ValueError("Language is empty")
             self.models[lang] = model
         self.model_whisper = whisper
+        self.app_config = app_config
 
 
 import json
@@ -53,4 +61,5 @@ def init_config(path: str) -> Config:
         for lang, model in data.get("models", {}).items():
             models[lang] = ModleConfig(model)
         whisper = ModleWhisper(data.get("model_whisper", {}))
-    return Config(svr, models,whisper)
+        app_config = ModelAppConfig(data.get("app", {}))
+    return Config(svr, models, whisper, app_config)
