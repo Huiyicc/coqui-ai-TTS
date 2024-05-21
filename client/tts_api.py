@@ -215,7 +215,7 @@ class RequestASR(BaseModel):
     file_name: str = ""
     out_type: str = "obj"
     align_text: str = ""
-    lang: str = "en"
+    lang: str = ""
 
 
 import asr_help
@@ -247,9 +247,15 @@ async def asr(item: RequestASR):
                                                                   compute_type="int8_float16")
     with torch.no_grad():
         if item.align_text != "":
-            result = stable_whisper_model.align(inpf, item.align_text, language=item.lang)
+            if item.lang == "":
+                result = stable_whisper_model.align(inpf, item.align_text)
+            else:
+                result = stable_whisper_model.align(inpf, item.align_text, language=item.lang)
         else:
-            result = stable_whisper_model.transcribe_stable(inpf, language=item.lang)
+            if item.lang == "":
+                result = stable_whisper_model.transcribe_stable(inpf)
+            else:
+                result = stable_whisper_model.transcribe_stable(inpf, language=item.lang)
     if item.out_type == "obj":
         return JSONResponse(status_code=200,
                             content={
