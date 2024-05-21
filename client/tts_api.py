@@ -80,12 +80,25 @@ reps = {
     '﹂': '"',
     '﹃': "'",
     '﹄': "'",
+    '  ': " ",
+}
+
+reps_grammar ={
+    '\' s': '\'s',
+    '\' m': '\'m',
+    '\' t': '\'t',
+    '\' re': '\'re',
+    '\' ll': '\'ll',
+    '\' ve': '\'ve',
+    '\' d': '\'d',
 }
 
 
 def cut_text(text: str, restrict: int = 250):
     # 首先将常用符号换为英文
     for k, v in reps.items():
+        text = text.replace(k, v)
+    for k, v in reps_grammar.items():
         text = text.replace(k, v)
     # 然后将文本按照标点符号切分
     re_list = []
