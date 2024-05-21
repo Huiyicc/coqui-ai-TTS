@@ -279,22 +279,22 @@ def initsvr():
         # model_cache.model.load_checkpoint(model_cache.config, checkpoint_path=model.checkpoint_path,
         #                                   vocab_path=model.tokenizer_path, use_deepspeed=False)
         model_cache.model.load_checkpoint(model_cache.config,
-                                          checkpoint_path=r"G:\models\coquiai\GPT_XTTS_LJSpeech_FT-May-17-2024_03+19PM-a6e2beb1\best_model_21615.pth",
+                                          checkpoint_path=model.checkpoint_path,
                                           vocab_path=model.tokenizer_path,
                                           use_deepspeed=False)
         model_cache.gpt_cond_latent, model_cache.speaker_embedding = model_cache.model.get_conditioning_latents(
             audio_path=[model.speaker_reference]
         )
+        print("Model s")
         model_cache.gpt_cond_latent_short, model_cache.speaker_embedding_short = model_cache.model.get_conditioning_latents(
             audio_path=[model.speaker_reference_short]
         )
         model_cache.model = model_cache.model.cuda()
         models_cache[lang] = model_cache
 
+import uvicorn
 
 if __name__ == '__main__':
     initsvr()
     print("loading done")
-    import uvicorn
-
     uvicorn.run(app, host=server_config.server.host, port=server_config.server.port)

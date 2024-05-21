@@ -23,8 +23,8 @@ class ModleConfig:
 class ModleWhisper:
     def __init__(self, jsonobj: dict):
         self.model_path = jsonobj.get("path", "")
-        if os.path.exists(self.model_path) is False:
-            raise FileNotFoundError("Whisper Model path not found")
+        # if os.path.exists(self.model_path) is False:
+        #     raise FileNotFoundError("Whisper Model path not found")
 
 
 class Config:
