@@ -255,9 +255,6 @@ async def asr(item: RequestASR):
     if not os.path.exists(inpf):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File not found")
     global stable_whisper_model
-    if stable_whisper_model is None:
-        stable_whisper_model = stable_whisper.load_faster_whisper(server_config.model_whisper.model_path, device="cuda",
-                                                                  compute_type="int8_float16")
     with torch.no_grad():
         if item.align_text != "":
             if item.lang == "":
@@ -310,6 +307,10 @@ def initsvr():
         )
         model_cache.model = model_cache.model.cuda()
         models_cache[lang] = model_cache
+    global stable_whisper_model
+    print("loading asr model")
+    stable_whisper_model = stable_whisper.load_faster_whisper(server_config.model_whisper.model_path, device="cuda",
+                                                              compute_type="int8_float16")
 
 
 import uvicorn
