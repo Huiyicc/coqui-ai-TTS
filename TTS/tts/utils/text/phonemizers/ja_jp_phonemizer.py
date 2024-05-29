@@ -37,18 +37,18 @@ class JA_JP_Phonemizer(BasePhonemizer):
     def name():
         return "ja_jp_phonemizer"
 
-    def _phonemize(self, text: str, separator: str = "|") -> str:
-        ph = japanese_text_to_phonemes(text)
+    def _phonemize(self, text: str, separator: str = "|", replace: bool = True) -> str:
+        ph = japanese_text_to_phonemes(text, replace)
         if separator is not None or separator != "":
             return separator.join(ph)
         return ph
 
-    def phonemize(self, text: str, separator="|", language=None) -> str:
+    def phonemize(self, text: str, separator="|", language=None, replace: bool = True) -> str:
         """Custom phonemize for JP_JA
 
         Skip pre-post processing steps used by the other phonemizers.
         """
-        return self._phonemize(text, separator)
+        return self._phonemize(text, separator, replace)
 
     @staticmethod
     def supported_languages() -> Dict:
@@ -59,7 +59,6 @@ class JA_JP_Phonemizer(BasePhonemizer):
 
     def is_available(self) -> bool:
         return True
-
 
 # if __name__ == "__main__":
 #     text = "これは、電話をかけるための私の日本語の例のテキストです。"

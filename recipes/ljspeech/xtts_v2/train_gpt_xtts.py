@@ -8,7 +8,7 @@ from TTS.tts.layers.xtts.trainer.gpt_trainer import GPTArgs, GPTTrainer, GPTTrai
 from TTS.utils.manage import ModelManager
 
 # Logging parameters
-RUN_NAME = "GPT_XTTS_v2.0_LJSpeech_FT"
+RUN_NAME = "GPT_XTTS_v2.0_LJSpeech_EN_US"
 PROJECT_NAME = "XTTS_trainer"
 DASHBOARD_LOGGER = "tensorboard"
 LOGGER_URI = None
@@ -23,12 +23,22 @@ BATCH_SIZE = 3  # set here the batch size
 GRAD_ACUMM_STEPS = 84  # set here the grad accumulation steps
 # Note: we recommend that BATCH_SIZE * GRAD_ACUMM_STEPS need to be at least 252 for more efficient training. You can increase/decrease BATCH_SIZE but then set GRAD_ACUMM_STEPS accordingly.
 
-# Define here the dataset that you want to use for the fine-tuning on.
+# ja
+# # Define here the dataset that you want to use for the fine-tuning on.
+# config_dataset = BaseDatasetConfig(
+#     formatter="ljspeech",
+#     dataset_name="ljspeech",
+#     path="/home/huiyi/code/dataset/jsut_ver1.1/basic5000_22k/",
+#     meta_file_train="/home/huiyi/code/dataset/jsut_ver1.1/basic5000_22k/metadata.csv",
+#     language="ja",
+# )
+
+# en_us
 config_dataset = BaseDatasetConfig(
     formatter="ljspeech",
     dataset_name="ljspeech",
-    path="/raid/datasets/LJSpeech-1.1_24khz/",
-    meta_file_train="/raid/datasets/LJSpeech-1.1_24khz/metadata.csv",
+    path="/home/huiyi/code/dataset/VCTK-Corpus-0.92/wav22_silence_trimmed/p229/",
+    meta_file_train="/home/huiyi/code/dataset/VCTK-Corpus-0.92/wav22_silence_trimmed/p229/metadata.csv",
     language="en",
 )
 
@@ -38,7 +48,6 @@ DATASETS_CONFIG_LIST = [config_dataset]
 # Define the path where XTTS v2.0.1 files will be downloaded
 CHECKPOINTS_OUT_PATH = os.path.join(OUT_PATH, "XTTS_v2.0_original_model_files/")
 os.makedirs(CHECKPOINTS_OUT_PATH, exist_ok=True)
-
 
 # DVAE files
 DVAE_CHECKPOINT_LINK = "https://coqui.gateway.scarf.sh/hf-coqui/XTTS-v2/main/dvae.pth"
@@ -52,7 +61,6 @@ MEL_NORM_FILE = os.path.join(CHECKPOINTS_OUT_PATH, os.path.basename(MEL_NORM_LIN
 if not os.path.isfile(DVAE_CHECKPOINT) or not os.path.isfile(MEL_NORM_FILE):
     print(" > Downloading DVAE files!")
     ModelManager._download_model_files([MEL_NORM_LINK, DVAE_CHECKPOINT_LINK], CHECKPOINTS_OUT_PATH, progress_bar=True)
-
 
 # Download XTTS v2.0 checkpoint if needed
 TOKENIZER_FILE_LINK = "https://coqui.gateway.scarf.sh/hf-coqui/XTTS-v2/main/vocab.json"
@@ -69,10 +77,11 @@ if not os.path.isfile(TOKENIZER_FILE) or not os.path.isfile(XTTS_CHECKPOINT):
         [TOKENIZER_FILE_LINK, XTTS_CHECKPOINT_LINK], CHECKPOINTS_OUT_PATH, progress_bar=True
     )
 
-
 # Training sentences generations
 SPEAKER_REFERENCE = [
-    "./tests/data/ljspeech/wavs/LJ001-0002.wav"  # speaker reference to be used in training test sentences
+    # speaker reference to be used in training test sentences
+    "/home/huiyi/code/dataset/VCTK-Corpus-0.92/wav22_silence_trimmed/p229/wavs/p229_001_mic1.wav",
+    "/home/huiyi/code/dataset/VCTK-Corpus-0.92/wav22_silence_trimmed/p229/wavs/p229_004_mic1.wav",
 ]
 LANGUAGE = config_dataset.language
 
@@ -132,12 +141,12 @@ def main():
         lr_scheduler_params={"milestones": [50000 * 18, 150000 * 18, 300000 * 18], "gamma": 0.5, "last_epoch": -1},
         test_sentences=[
             {
-                "text": "It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent.",
+                "text": "With snowy winters, hot summers and plenty of indoor and outdoor activities to fit all seasons, Munich has something to appeal to visitors throughout the year.",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
             },
             {
-                "text": "This cake is great. It's so delicious and moist.",
+                "text": "High summer can mean high temperatures in Munich, but the city’s ample outdoor offerings certainly help to take the edge off. ",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
             },
@@ -158,7 +167,8 @@ def main():
     # init the trainer and 🚀
     trainer = Trainer(
         TrainerArgs(
-            restore_path=None,  # xtts checkpoint is restored via xtts_checkpoint key so no need of restore it using Trainer restore_path parameter
+            restore_path=None,
+            # xtts checkpoint is restored via xtts_checkpoint key so no need of restore it using Trainer restore_path parameter
             skip_train_epoch=False,
             start_with_eval=START_WITH_EVAL,
             grad_accum_steps=GRAD_ACUMM_STEPS,

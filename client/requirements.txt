@@ -5,3 +5,5 @@ torchaudio
 uvicorn
 faster-whisper
 stable-ts
+cutlet
+fugashi[unidic]

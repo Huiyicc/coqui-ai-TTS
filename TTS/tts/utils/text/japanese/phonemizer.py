@@ -364,9 +364,7 @@ def text2kata(text: str) -> str:
         parts = line.split("\t")
 
         word, yomi = parts[0], parts[1]
-        if yomi:
-            res.append(yomi)
-        else:
+        if word:
             if word in _SYMBOL_TOKENS:
                 res.append(word)
             elif word in ("っ", "ッ"):
@@ -375,6 +373,17 @@ def text2kata(text: str) -> str:
                 pass
             else:
                 res.append(word)
+        # if yomi:
+        #     res.append(yomi)
+        # else:
+        #     if word in _SYMBOL_TOKENS:
+        #         res.append(word)
+        #     elif word in ("っ", "ッ"):
+        #         res.append("ッ")
+        #     elif word in _NO_YOMI_TOKENS:
+        #         pass
+        #     else:
+        #         res.append(word)
     return hira2kata("".join(res))
 
 
@@ -442,7 +451,6 @@ _ALPHASYMBOL_YOMI = {
     "ω": "オメガ",
 }
 
-
 _NUMBER_WITH_SEPARATOR_RX = re.compile("[0-9]{1,3}(,[0-9]{3})+")
 _CURRENCY_MAP = {"$": "ドル", "¥": "円", "£": "ポンド", "€": "ユーロ"}
 _CURRENCY_RX = re.compile(r"([$¥£€])([0-9.]*[0-9])")
@@ -460,11 +468,13 @@ def japanese_convert_alpha_symbols_to_words(text: str) -> str:
     return "".join([_ALPHASYMBOL_YOMI.get(ch, ch) for ch in text.lower()])
 
 
-def japanese_text_to_phonemes(text: str) -> str:
+def japanese_text_to_phonemes(text: str, replace: bool = True) -> str:
     """Convert Japanese text to phonemes."""
     res = unicodedata.normalize("NFKC", text)
     res = japanese_convert_numbers_to_words(res)
     res = japanese_convert_alpha_symbols_to_words(res)
     res = text2kata(res)
     res = kata2phoneme(res)
-    return res.replace(" ", "")
+    if replace:
+        res = res.replace(" ", "")
+    return res

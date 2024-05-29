@@ -1,0 +1,1 @@
+python -m unidic download

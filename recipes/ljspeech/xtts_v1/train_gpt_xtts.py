@@ -27,9 +27,9 @@ GRAD_ACUMM_STEPS = 84  # set here the grad accumulation steps
 config_dataset = BaseDatasetConfig(
     formatter="ljspeech",
     dataset_name="ljspeech",
-    path=r"/home/huiyi/code/dataset/LJSpeech-1.1",
-    meta_file_train=r"/home/huiyi/code/dataset/LJSpeech-1.1/metadata.csv",
-    language="en",
+    path=r"/home/huiyi/code/dataset/jsut_ver1.1/utparaphrase512_22k",
+    meta_file_train=r"/home/huiyi/code/dataset/jsut_ver1.1/utparaphrase512_22k/metadata.csv",
+    language="ja",
 )
 
 # Add here the configs of the datasets
@@ -72,7 +72,7 @@ if not os.path.isfile(TOKENIZER_FILE) or not os.path.isfile(XTTS_CHECKPOINT):
 
 # Training sentences generations
 SPEAKER_REFERENCE = [
-    "/home/huiyi/code/dataset/LJSpeech-1.1/wavs_44/LJ001-0002.wav"  # speaker reference to be used in training test sentences
+    "/home/huiyi/code/dataset/jsut_ver1.1/utparaphrase512_22k/wavs/UT-PARAPHRASE-sent002-phrase1.wav"  # speaker reference to be used in training test sentences
 ]
 LANGUAGE = config_dataset.language
 
@@ -132,12 +132,12 @@ def main():
         lr_scheduler_params={"milestones": [50000 * 18, 150000 * 18, 300000 * 18], "gamma": 0.5, "last_epoch": -1},
         test_sentences=[
             {
-                "text": "It took me quite a long time to develop a voice, and now that I have it I'm not going to be silent.",
+                "text": "木曽川は、しばしば日本のライン川と呼ばれている。",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
             },
             {
-                "text": "This cake is great. It's so delicious and moist.",
+                "text": "音声データは，以下の場合に限り使用可能です。",
                 "speaker_wav": SPEAKER_REFERENCE,
                 "language": LANGUAGE,
             },
