@@ -346,12 +346,12 @@ async def tts(item: RequestTTS):
             )
             audio_opt.append(out["wav"])
             # audio_opt.append(zero_wav)
-    if len(re_list) > 1:
+    if len(audio_opt) > 1:
         out = (numpy.concatenate(audio_opt, 0) * 32768).astype(
             numpy.int16
         )
     else:
-        out = audio_opt[0]
+        return JSONResponse(status_code=200, content={"data": ""})
     # out = numpy.concatenate(audio_opt, 0)
     in_memory_wav = BytesIO()
     # wav_tensor = torch.tensor(out["wav"]).unsqueeze(0)
