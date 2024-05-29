@@ -312,18 +312,13 @@ async def tts(item: RequestTTS):
     #     dtype=numpy.float16
     # )
     if len(re_list) < 1:
-        return JSONResponse(status_code=200, content={"data": ""})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
     audio_opt = []
     for text_i in re_list:
         with torch.no_grad():
             # if (text[0] not in splits and len(
             #   get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
-            txt = text_i.strip()
-            if txt == "":
-                continue
-            print("开始推理:", txt)
-            if len(txt) < 1:
-                return JSONResponse(status_code=200, content={"data": ""})
+            print("开始推理:", text_i)
             # if len(txt) < 10:
             #     out = models_cache[item.lang].model.inference(
             #         txt,
@@ -339,7 +334,7 @@ async def tts(item: RequestTTS):
             #         models_cache[item.lang].speaker_embedding,
             #     )
             out = models_cache[item.lang].model.inference(
-                txt,
+                text_i,
                 models_cache[item.lang].svr_config.language,
                 models_cache[item.lang].gpt_cond_latent,
                 models_cache[item.lang].speaker_embedding,
