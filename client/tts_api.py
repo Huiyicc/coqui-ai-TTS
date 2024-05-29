@@ -181,85 +181,95 @@ def merge_short_text_in_array(texts, threshold):
     return result
 
 
-@app.get("/v1/api/tts")
-async def tts():
-    item = RequestTTS(
-        text="vitamin",
-        lang="en_uk",
-        out_base64=False
-    )
-    if item.lang not in models_cache.keys():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Language not supported")
-    # 处理切分文本
-    # re_list = []
-    # text = item.text.strip()
-    # text = text.strip("\n")
-    # # text = cut1(text)
-    # text = text.replace("\n\n", "\n")
-    # re_list = cut_text(text)
-    # if re_list is None:
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-    re_list = item.text.strip()
-    re_list = re_list.replace("\n\n", "\n")
-    if len(re_list) > 200:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-    re_list = re_list.split("\n")
-    # zero_wav = numpy.zeros(
-    #     int(0.3 * 24000),
-    #     dtype=numpy.float16
-    # )
-    audio_opt = []
-    for text_i in re_list:
-        with torch.no_grad():
-            # if (text[0] not in splits and len(
-            #   get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
-            txt = text_i.strip()
-            if txt == "":
-                continue
-            print("开始推理:", txt)
-            if len(txt) < 1:
-                return JSONResponse(status_code=200, content={"data": ""})
-            # if len(txt) < 10:
-            #     out = models_cache[item.lang].model.inference(
-            #         txt,
-            #         models_cache[item.lang].svr_config.language,
-            #         models_cache[item.lang].gpt_cond_latent_short,
-            #         models_cache[item.lang].speaker_embedding_short,
-            #     )
-            # else:
-            #     out = models_cache[item.lang].model.inference(
-            #         txt,
-            #         models_cache[item.lang].svr_config.language,
-            #         models_cache[item.lang].gpt_cond_latent,
-            #         models_cache[item.lang].speaker_embedding,
-            #     )
-            out = models_cache[item.lang].model.inference(
-                txt,
-                models_cache[item.lang].svr_config.language,
-                models_cache[item.lang].gpt_cond_latent,
-                models_cache[item.lang].speaker_embedding,
-            )
-            audio_opt.append(out["wav"])
-            # audio_opt.append(zero_wav)
-    out = (numpy.concatenate(audio_opt, 0) * 32768).astype(
-        numpy.int16
-    )
-    # out = numpy.concatenate(audio_opt, 0)
-    in_memory_wav = BytesIO()
-    # wav_tensor = torch.tensor(out["wav"]).unsqueeze(0)
-    with sf.SoundFile(in_memory_wav, mode='w', samplerate=22000, channels=1, format='wav') as audio_file:
-        audio_file.write(out)
-    in_memory_wav.seek(0)
-    if item.out_base64:
-        return JSONResponse(status_code=200,
-                            content={"data": base64.b64encode(in_memory_wav.getbuffer()).decode()}
-                            )
-    uuids = uuid.uuid4()
-    headers = {
-        'Content-Disposition': f'inline; filename="{uuids}.wav"',  # 告诉浏览器直接播放而不是下载
-    }
-    return StreamingResponse(in_memory_wav, media_type="audio/wav", headers=headers)
-
+# @app.get("/v1/api/tts")
+# async def tts():
+#     item = RequestTTS(
+#         text="vitamin",
+#         lang="en_uk",
+#         out_base64=False
+#     )
+#     if item.lang not in models_cache.keys():
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Language not supported")
+#     # 处理切分文本
+#     # re_list = []
+#     # text = item.text.strip()
+#     # text = text.strip("\n")
+#     # # text = cut1(text)
+#     # text = text.replace("\n\n", "\n")
+#     # re_list = cut_text(text)
+#     # if re_list is None:
+#     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
+#     re_list = item.text.strip()
+#     re_list = re_list.replace("\n\n", "\n")
+#     if len(re_list) > 200:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
+#     tlist = re_list.split("\n")
+#     re_list = []
+#     for i in range(len(tlist)):
+#         if len(tlist[i]) > 200:
+#             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
+#         tlist[i] = tlist[i].strip()
+#         if tlist[i] == "":
+#             continue
+#         if tlist[i][-1] not in splits:
+#             tlist[i] += "."
+#         re_list.append(tlist[i])
+#     # zero_wav = numpy.zeros(
+#     #     int(0.3 * 24000),
+#     #     dtype=numpy.float16
+#     # )
+#     audio_opt = []
+#     for text_i in re_list:
+#         with torch.no_grad():
+#             # if (text[0] not in splits and len(
+#             #   get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
+#             txt = text_i.strip()
+#             if txt == "":
+#                 continue
+#             print("开始推理:", txt)
+#             if len(txt) < 1:
+#                 return JSONResponse(status_code=200, content={"data": ""})
+#             # if len(txt) < 10:
+#             #     out = models_cache[item.lang].model.inference(
+#             #         txt,
+#             #         models_cache[item.lang].svr_config.language,
+#             #         models_cache[item.lang].gpt_cond_latent_short,
+#             #         models_cache[item.lang].speaker_embedding_short,
+#             #     )
+#             # else:
+#             #     out = models_cache[item.lang].model.inference(
+#             #         txt,
+#             #         models_cache[item.lang].svr_config.language,
+#             #         models_cache[item.lang].gpt_cond_latent,
+#             #         models_cache[item.lang].speaker_embedding,
+#             #     )
+#             out = models_cache[item.lang].model.inference(
+#                 txt,
+#                 models_cache[item.lang].svr_config.language,
+#                 models_cache[item.lang].gpt_cond_latent,
+#                 models_cache[item.lang].speaker_embedding,
+#             )
+#             audio_opt.append(out["wav"])
+#             # audio_opt.append(zero_wav)
+#     out = (numpy.concatenate(audio_opt, 0) * 32768).astype(
+#         numpy.int16
+#     )
+#     # out = numpy.concatenate(audio_opt, 0)
+#     in_memory_wav = BytesIO()
+#     # wav_tensor = torch.tensor(out["wav"]).unsqueeze(0)
+#     with sf.SoundFile(in_memory_wav, mode='w', samplerate=24000, channels=1, format='wav') as audio_file:
+#         audio_file.write(out)
+#     in_memory_wav.seek(0)
+#     if item.out_base64:
+#         return JSONResponse(status_code=200,
+#                             content={"data": base64.b64encode(in_memory_wav.getbuffer()).decode()}
+#                             )
+#     uuids = uuid.uuid4()
+#     headers = {
+#         'Content-Disposition': f'inline; filename="{uuids}.wav"',  # 告诉浏览器直接播放而不是下载
+#     }
+#     return StreamingResponse(in_memory_wav, media_type="audio/wav", headers=headers)
+#
 
 @app.post("/v1/api/tts")
 async def tts(item: RequestTTS):
@@ -286,7 +296,17 @@ async def tts(item: RequestTTS):
     re_list = re_list.replace("\n\n", "\n")
     if len(re_list) > 200:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-    re_list = re_list.split("\n")
+    tlist = re_list.split("\n")
+    re_list = []
+    for i in range(len(tlist)):
+        if len(tlist[i]) > 200:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
+        tlist[i] = tlist[i].strip()
+        if tlist[i] == "":
+            continue
+        if tlist[i][-1] not in splits:
+            tlist[i] += "."
+        re_list.append(tlist[i])
     # zero_wav = numpy.zeros(
     #     int(0.3 * 24000),
     #     dtype=numpy.float16
@@ -330,7 +350,7 @@ async def tts(item: RequestTTS):
     # out = numpy.concatenate(audio_opt, 0)
     in_memory_wav = BytesIO()
     # wav_tensor = torch.tensor(out["wav"]).unsqueeze(0)
-    with sf.SoundFile(in_memory_wav, mode='w', samplerate=16000, channels=1, format='wav') as audio_file:
+    with sf.SoundFile(in_memory_wav, mode='w', samplerate=24000, channels=1, format='wav') as audio_file:
         audio_file.write(out)
     in_memory_wav.seek(0)
     if item.out_base64:
@@ -479,11 +499,12 @@ def initsvr():
     # model_config = XttsConfig()
     # model_config.load_json(config_path)
     for lang, model in server_config.models.items():
-        print(f"Loading model {lang}l")
+        print(f"Loading model {lang}")
         model_cache = ModelCache()
         model_cache.svr_config = model
         model_cache.config = XttsConfig()
         model_cache.config.load_json(model.config_path)
+        print(f"model from {model.checkpoint_path}")
         model_cache.model = Xtts.init_from_config(model_cache.config)
         # model_cache.model.load_checkpoint(model_cache.config, checkpoint_path=model.checkpoint_path,
         #                                   vocab_path=model.tokenizer_path, use_deepspeed=False)
@@ -491,6 +512,7 @@ def initsvr():
                                           checkpoint_path=model.checkpoint_path,
                                           vocab_path=model.tokenizer_path,
                                           use_deepspeed=False)
+        print(f"load speaker reference {model.speaker_reference, model.speaker_reference_short}")
         model_cache.gpt_cond_latent, model_cache.speaker_embedding = model_cache.model.get_conditioning_latents(
             audio_path=[model.speaker_reference, model.speaker_reference_short]
         )
