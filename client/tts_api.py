@@ -351,6 +351,7 @@ async def tts(item: RequestTTS):
             numpy.int16
         )
     else:
+        print(f"no audio,input:{item.text}")
         return JSONResponse(status_code=200, content={"data": ""})
     # out = numpy.concatenate(audio_opt, 0)
     in_memory_wav = BytesIO()
