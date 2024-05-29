@@ -311,6 +311,8 @@ async def tts(item: RequestTTS):
     #     int(0.3 * 24000),
     #     dtype=numpy.float16
     # )
+    if len(re_list) < 1:
+        return JSONResponse(status_code=200, content={"data": ""})
     audio_opt = []
     for text_i in re_list:
         with torch.no_grad():
