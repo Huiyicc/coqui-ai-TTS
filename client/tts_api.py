@@ -292,67 +292,24 @@ async def tts(item: RequestTTS):
     # re_list = cut_text(text)
     # if re_list is None:
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-    re_list = item.text.strip()
-    re_list = re_list.replace("\n\n", "\n")
-    if len(re_list) > 200:
+    re_text = item.text.strip()
+    if re_text.find("\n") > 0 or re_text == "":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error text")
+    # re_list = re_list.replace("\n\n", "\n")
+    if len(re_text) > 200:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-    tlist = re_list.split("\n")
-    re_list = []
-    for i in range(len(tlist)):
-        if len(tlist[i]) > 200:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-        tlist[i] = tlist[i].strip()
-        if tlist[i] == "":
-            continue
-        if tlist[i][-1] not in splits:
-            tlist[i] += "."
-        re_list.append(tlist[i])
-    # zero_wav = numpy.zeros(
-    #     int(0.3 * 24000),
-    #     dtype=numpy.float16
-    # )
-    if len(re_list) < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
-    audio_opt = []
-    for text_i in re_list:
-        with torch.no_grad():
-            # if (text[0] not in splits and len(
-            #   get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
-            print("开始推理:", text_i)
-            # if len(txt) < 10:
-            #     out = models_cache[item.lang].model.inference(
-            #         txt,
-            #         models_cache[item.lang].svr_config.language,
-            #         models_cache[item.lang].gpt_cond_latent_short,
-            #         models_cache[item.lang].speaker_embedding_short,
-            #     )
-            # else:
-            #     out = models_cache[item.lang].model.inference(
-            #         txt,
-            #         models_cache[item.lang].svr_config.language,
-            #         models_cache[item.lang].gpt_cond_latent,
-            #         models_cache[item.lang].speaker_embedding,
-            #     )
-            out = models_cache[item.lang].model.inference(
-                text_i,
-                models_cache[item.lang].svr_config.language,
-                models_cache[item.lang].gpt_cond_latent,
-                models_cache[item.lang].speaker_embedding,
-            )
-            audio_opt.append(out["wav"])
-            # audio_opt.append(zero_wav)
-    if len(audio_opt) > 1:
-        out = (numpy.concatenate(audio_opt, 0) * 32768).astype(
-            numpy.int16
+    with torch.no_grad():
+        print("开始推理:", re_text)
+        out = models_cache[item.lang].model.inference(
+            re_text,
+            models_cache[item.lang].svr_config.language,
+            models_cache[item.lang].gpt_cond_latent,
+            models_cache[item.lang].speaker_embedding,
         )
-    else:
-        print(f"no audio,input:{item.text}")
-        return JSONResponse(status_code=200, content={"data": ""})
-    # out = numpy.concatenate(audio_opt, 0)
     in_memory_wav = BytesIO()
     # wav_tensor = torch.tensor(out["wav"]).unsqueeze(0)
     with sf.SoundFile(in_memory_wav, mode='w', samplerate=24000, channels=1, format='wav') as audio_file:
-        audio_file.write(out)
+        audio_file.write(out["wav"])
     in_memory_wav.seek(0)
     if item.out_base64:
         return JSONResponse(status_code=200,
@@ -363,6 +320,74 @@ async def tts(item: RequestTTS):
         'Content-Disposition': f'inline; filename="{uuids}.wav"',  # 告诉浏览器直接播放而不是下载
     }
     return StreamingResponse(in_memory_wav, media_type="audio/wav", headers=headers)
+
+    # # tlist = re_list.split("\n")
+    # re_list = []
+    # for i in range(len(tlist)):
+    #     if len(tlist[i]) > 200:
+    #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
+    #     tlist[i] = tlist[i].strip()
+    #     if tlist[i] == "":
+    #         continue
+    #     if tlist[i][-1] not in splits:
+    #         tlist[i] += "."
+    #     re_list.append(tlist[i])
+    # # zero_wav = numpy.zeros(
+    # #     int(0.3 * 24000),
+    # #     dtype=numpy.float16
+    # # )
+    # if len(re_list) < 1:
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Text too long")
+    # audio_opt = []
+    # for text_i in re_list:
+    #     with torch.no_grad():
+    #         # if (text[0] not in splits and len(
+    #         #   get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
+    #         print("开始推理:", text_i)
+    #         # if len(txt) < 10:
+    #         #     out = models_cache[item.lang].model.inference(
+    #         #         txt,
+    #         #         models_cache[item.lang].svr_config.language,
+    #         #         models_cache[item.lang].gpt_cond_latent_short,
+    #         #         models_cache[item.lang].speaker_embedding_short,
+    #         #     )
+    #         # else:
+    #         #     out = models_cache[item.lang].model.inference(
+    #         #         txt,
+    #         #         models_cache[item.lang].svr_config.language,
+    #         #         models_cache[item.lang].gpt_cond_latent,
+    #         #         models_cache[item.lang].speaker_embedding,
+    #         #     )
+    #         out = models_cache[item.lang].model.inference(
+    #             text_i,
+    #             models_cache[item.lang].svr_config.language,
+    #             models_cache[item.lang].gpt_cond_latent,
+    #             models_cache[item.lang].speaker_embedding,
+    #         )
+    #         audio_opt.append(out["wav"])
+    #         # audio_opt.append(zero_wav)
+    # if len(audio_opt) > 1:
+    #     out = (numpy.concatenate(audio_opt, 0) * 32768).astype(
+    #         numpy.int16
+    #     )
+    # else:
+    #     print(f"no audio,input:{item.text}")
+    #     return JSONResponse(status_code=200, content={"data": ""})
+    # # out = numpy.concatenate(audio_opt, 0)
+    # in_memory_wav = BytesIO()
+    # # wav_tensor = torch.tensor(out["wav"]).unsqueeze(0)
+    # with sf.SoundFile(in_memory_wav, mode='w', samplerate=24000, channels=1, format='wav') as audio_file:
+    #     audio_file.write(out)
+    # in_memory_wav.seek(0)
+    # if item.out_base64:
+    #     return JSONResponse(status_code=200,
+    #                         content={"data": base64.b64encode(in_memory_wav.getbuffer()).decode()}
+    #                         )
+    # uuids = uuid.uuid4()
+    # headers = {
+    #     'Content-Disposition': f'inline; filename="{uuids}.wav"',  # 告诉浏览器直接播放而不是下载
+    # }
+    # return StreamingResponse(in_memory_wav, media_type="audio/wav", headers=headers)
 
 
 # def predict_streaming_generator(parsed_input: dict = Body(...)):
